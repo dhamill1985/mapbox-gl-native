@@ -33,6 +33,12 @@ class InfoWindowManager {
         this.infoWindows = new ArrayList<>();
     }
 
+    void update() {
+        for (InfoWindow infoWindow : infoWindows) {
+            infoWindow.update();
+        }
+    }
+
     void setInfoWindowAdapter(@Nullable MapboxMap.InfoWindowAdapter infoWindowAdapter) {
         this.infoWindowAdapter = infoWindowAdapter;
     }

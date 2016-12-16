@@ -10,6 +10,7 @@ import com.mapbox.mapboxsdk.annotations.Annotation;
 import com.mapbox.mapboxsdk.annotations.BaseMarkerOptions;
 import com.mapbox.mapboxsdk.annotations.BaseMarkerViewOptions;
 import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.InfoWindow;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewManager;
@@ -44,8 +45,6 @@ class AnnotationManager {
     private final List<Marker> selectedMarkers = new ArrayList<>();
 
     private MapboxMap mapboxMap;
-
-    private HashMap<MarkerView, MarkerViewManager.OnMarkerViewAddedListener> markerMap = new HashMap<>();
     private MapboxMap.OnMarkerClickListener onMarkerClickListener;
 
     AnnotationManager(NativeMapView view, MapView mapView, MarkerViewManager markerViewManager) {
@@ -65,6 +64,11 @@ class AnnotationManager {
         this.mapboxMap = mapboxMap;
         this.markerViewManager.bind(mapboxMap);
         return this;
+    }
+
+    void update(){
+        markerViewManager.scheduleViewMarkerInvalidation();
+        infoWindowManager.update();
     }
 
     //
@@ -210,16 +214,7 @@ class AnnotationManager {
         return marker;
     }
 
-    MarkerView addMarker(@NonNull BaseMarkerViewOptions markerOptions, @NonNull MapboxMap mapboxMap) {
-        MarkerView marker = prepareViewMarker(markerOptions);
-        marker.setMapboxMap(mapboxMap);
-        long id = nativeMapView.addMarker(marker);
-        marker.setId(id);
-        annotations.put(id, marker);
-        return marker;
-    }
-
-    public MarkerView addMarker(@NonNull BaseMarkerViewOptions markerOptions, @NonNull MapboxMap mapboxMap, final MarkerViewManager.OnMarkerViewAddedListener onMarkerViewAddedListener) {
+    MarkerView addMarker(@NonNull BaseMarkerViewOptions markerOptions, @NonNull MapboxMap mapboxMap, @Nullable MarkerViewManager.OnMarkerViewAddedListener onMarkerViewAddedListener) {
         final MarkerView marker = prepareViewMarker(markerOptions);
 
         // add marker to map
@@ -228,7 +223,9 @@ class AnnotationManager {
         marker.setId(id);
         annotations.put(id, marker);
 
-        markerViewManager.addOnMarkerViewAddedListener(marker, onMarkerViewAddedListener);
+        if(onMarkerViewAddedListener!=null) {
+            markerViewManager.addOnMarkerViewAddedListener(marker, onMarkerViewAddedListener);
+        }
         markerViewManager.setWaitingForRenderInvoke(true);
         return marker;
     }
@@ -359,7 +356,7 @@ class AnnotationManager {
         return selectedMarkers;
     }
 
-    public List<Marker> getMarkersInRect(@NonNull RectF rectangle) {
+    List<Marker> getMarkersInRect(@NonNull RectF rectangle) {
         // convert Rectangle to be density depedent
         float pixelRatio = nativeMapView.getPixelRatio();
         RectF rect = new RectF(rectangle.left / pixelRatio,
@@ -387,7 +384,7 @@ class AnnotationManager {
         return new ArrayList<>(annotations);
     }
 
-    public List<MarkerView> getMarkerViewsInRect(@NonNull RectF rectangle) {
+    List<MarkerView> getMarkerViewsInRect(@NonNull RectF rectangle) {
         float pixelRatio = nativeMapView.getPixelRatio();
         RectF rect = new RectF(rectangle.left / pixelRatio,
                 rectangle.top / pixelRatio,

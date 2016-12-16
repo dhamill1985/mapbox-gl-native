@@ -4,12 +4,14 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.PointF;
 import android.location.Location;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
 
 import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.constants.MyBearingTracking;
 import com.mapbox.mapboxsdk.constants.MyLocationTracking;
 import com.mapbox.mapboxsdk.location.LocationListener;
@@ -39,6 +41,34 @@ public final class TrackingSettings {
         this.myLocationView = myLocationView;
         this.focalPointChangedListener = focalPointChangedListener;
         this.uiSettings = uiSettings;
+    }
+
+    void initialise(MapboxMapOptions options){
+        setMyLocationEnabled(options.getLocationEnabled());
+    }
+
+    void onSaveInstanceState(Bundle outState){
+        outState.putInt(MapboxConstants.STATE_MY_LOCATION_TRACKING_MODE, getMyLocationTrackingMode());
+        outState.putInt(MapboxConstants.STATE_MY_BEARING_TRACKING_MODE, getMyBearingTrackingMode());
+        outState.putBoolean(MapboxConstants.STATE_MY_LOCATION_TRACKING_DISMISS, isDismissLocationTrackingOnGesture());
+        outState.putBoolean(MapboxConstants.STATE_MY_BEARING_TRACKING_DISMISS, isDismissBearingTrackingOnGesture());
+        outState.putBoolean(MapboxConstants.STATE_MY_LOCATION_ENABLED, isMyLocationEnabled());
+    }
+
+    void onRestoreInstanceState(Bundle savedInstanceState) {
+        try {
+            setMyLocationEnabled(savedInstanceState.getBoolean(MapboxConstants.STATE_MY_LOCATION_ENABLED));
+        } catch (SecurityException ignore) {
+            // User did not accept location permissions
+        }
+
+        //noinspection ResourceType
+        setMyLocationTrackingMode(savedInstanceState.getInt(MapboxConstants.STATE_MY_LOCATION_TRACKING_MODE, MyLocationTracking.TRACKING_NONE));
+        //noinspection ResourceType
+        setMyBearingTrackingMode(savedInstanceState.getInt(MapboxConstants.STATE_MY_BEARING_TRACKING_MODE, MyBearingTracking.NONE));
+
+        setDismissLocationTrackingOnGesture(savedInstanceState.getBoolean(MapboxConstants.STATE_MY_LOCATION_TRACKING_DISMISS, true));
+        setDismissBearingTrackingOnGesture(savedInstanceState.getBoolean(MapboxConstants.STATE_MY_BEARING_TRACKING_DISMISS, true));
     }
 
     /**
@@ -313,5 +343,20 @@ public final class TrackingSettings {
         }
         myLocationEnabled = locationEnabled;
         myLocationView.setEnabled(locationEnabled);
+    }
+
+    void update(){
+        if(!myLocationView.isEnabled()){
+            return;
+        }
+        myLocationView.update();
+    }
+
+    void onStart(){
+        myLocationView.onStart();
+    }
+
+    void onStop() {
+        myLocationView.onStop();
     }
 }
