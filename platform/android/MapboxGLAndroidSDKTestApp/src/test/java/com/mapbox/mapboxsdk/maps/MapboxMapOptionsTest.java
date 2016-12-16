@@ -178,12 +178,5 @@ public class MapboxMapOptionsTest {
     public void testMyLocationBackgroundTint() {
         assertEquals(Color.BLUE, new MapboxMapOptions().myLocationBackgroundTintColor(Color.BLUE).getMyLocationBackgroundTintColor());
     }
-
-    @Test
-    public void testAccessToken() {
-        assertNull(new MapboxMapOptions().getAccessToken());
-        assertEquals("test", new MapboxMapOptions().accessToken("test").getAccessToken());
-        assertNotEquals("nottest", new MapboxMapOptions().accessToken("test").getStyle());
-    }
 }
 

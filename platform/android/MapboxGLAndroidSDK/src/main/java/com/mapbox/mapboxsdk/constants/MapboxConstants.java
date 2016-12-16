@@ -1,6 +1,9 @@
 package com.mapbox.mapboxsdk.constants;
 
 import android.content.Context;
+
+import com.mapbox.mapboxsdk.Mapbox;
+
 import java.util.Locale;
 
 /**
@@ -12,13 +15,6 @@ public class MapboxConstants {
      * Default Locale for data processing (ex: String.toLowerCase(MAPBOX_LOCALE, "foo"))
      */
     public static final Locale MAPBOX_LOCALE = Locale.US;
-
-    /**
-     * Key used to store access token in AndroidManifest.xml
-     * @deprecated As of release 4.1.0, replaced by {@link com.mapbox.mapboxsdk.MapboxAccountManager#start(Context, String)}
-     */
-    @Deprecated
-    public static final String KEY_META_DATA_MANIFEST = "com.mapbox.AccessToken";
 
     /**
      * Key used to store staging data server url in AndroidManifest.xml

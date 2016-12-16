@@ -83,8 +83,6 @@ public class MapboxMapOptions implements Parcelable {
     private boolean textureMode;
 
     private String style;
-    @Deprecated
-    private String accessToken;
 
     /**
      * Creates a new MapboxMapOptions object.
@@ -143,7 +141,6 @@ public class MapboxMapOptions implements Parcelable {
         myLocationAccuracyTintColor = in.readInt();
 
         style = in.readString();
-        accessToken = in.readString();
         apiBaseUrl = in.readString();
         textureMode = in.readByte() != 0;
     }
@@ -173,8 +170,6 @@ public class MapboxMapOptions implements Parcelable {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.mapbox_MapView, 0, 0);
         try {
             mapboxMapOptions.camera(new CameraPosition.Builder(typedArray).build());
-
-            mapboxMapOptions.accessToken(typedArray.getString(R.styleable.mapbox_MapView_mapbox_accessToken));
             mapboxMapOptions.styleUrl(typedArray.getString(R.styleable.mapbox_MapView_mapbox_styleUrl));
             mapboxMapOptions.apiBaseUrl(typedArray.getString(R.styleable.mapbox_MapView_mapbox_apiBaseUrl));
 
@@ -263,22 +258,6 @@ public class MapboxMapOptions implements Parcelable {
      */
     public MapboxMapOptions camera(CameraPosition cameraPosition) {
         this.cameraPosition = cameraPosition;
-        return this;
-    }
-
-    /**
-     * <p>
-     * DEPRECATED @see MapboxAccountManager#start(String)
-     * </p>
-     * Specifies the accesstoken associated with a map view.
-     *
-     * @param accessToken Token to be used to access the service
-     * @return This
-     * @deprecated As of release 4.1.0, replaced by {@link com.mapbox.mapboxsdk.MapboxAccountManager#start(Context, String)}
-     */
-    @Deprecated
-    public MapboxMapOptions accessToken(String accessToken) {
-        this.accessToken = accessToken;
         return this;
     }
 
@@ -731,19 +710,6 @@ public class MapboxMapOptions implements Parcelable {
     }
 
     /**
-     * <p>
-     * DEPRECATED @see MapboxAccountManager#start(String)
-     * </p>
-     * Get the current configured access token for a map view.
-     *
-     * @return Access token to be used.
-     */
-    @Deprecated
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    /**
      * Get the current configured style url for a map view.
      *
      * @return Style url to be used.
@@ -990,7 +956,6 @@ public class MapboxMapOptions implements Parcelable {
         dest.writeInt(myLocationAccuracyTintColor);
 
         dest.writeString(style);
-        dest.writeString(accessToken);
         dest.writeString(apiBaseUrl);
         dest.writeByte((byte) (textureMode ? 1 : 0));
     }
@@ -1039,8 +1004,7 @@ public class MapboxMapOptions implements Parcelable {
         if (style != null ? !style.equals(options.style) : options.style != null) return false;
         if (apiBaseUrl != null ? !apiBaseUrl.equals(options.apiBaseUrl) : options.apiBaseUrl != null)
             return false;
-        return accessToken != null ? accessToken.equals(options.accessToken) : options.accessToken == null;
-
+        return false;
     }
 
     @Override
@@ -1081,7 +1045,6 @@ public class MapboxMapOptions implements Parcelable {
         result = 31 * result + (apiBaseUrl != null ? apiBaseUrl.hashCode() : 0);
         result = 31 * result + (textureMode ? 1 : 0);
         result = 31 * result + (style != null ? style.hashCode() : 0);
-        result = 31 * result + (accessToken != null ? accessToken.hashCode() : 0);
         return result;
     }
 }

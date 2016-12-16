@@ -25,7 +25,7 @@ import timber.log.Timber;
 import android.view.WindowManager;
 
 import com.mapbox.mapboxsdk.BuildConfig;
-import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.constants.GeoConstants;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.exceptions.TelemetryServiceNotConfiguredException;
@@ -625,7 +625,7 @@ public class MapboxEventManager {
             }
 
             // Check for NetworkConnectivity
-            if (!MapboxAccountManager.getInstance().isConnected()) {
+            if (!Mapbox.isConnected()) {
                 Timber.w("Not connected to network, so empty events cache and return without attempting to send events");
                 // Make sure that events don't pile up when Offline
                 // and thus impact available memory over time.

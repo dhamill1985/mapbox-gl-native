@@ -38,14 +38,12 @@ import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.R;
 import com.mapbox.mapboxsdk.annotations.MarkerViewManager;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.constants.Style;
-import com.mapbox.mapboxsdk.location.LocationListener;
-import com.mapbox.mapboxsdk.location.LocationServices;
 import com.mapbox.mapboxsdk.maps.widgets.CompassView;
 import com.mapbox.mapboxsdk.maps.widgets.MyLocationView;
 import com.mapbox.mapboxsdk.maps.widgets.MyLocationViewSettings;
@@ -55,11 +53,8 @@ import com.mapbox.mapboxsdk.telemetry.MapboxEventManager;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-
-import timber.log.Timber;
 
 /**
  * <p>
@@ -123,7 +118,6 @@ public class MapView extends FrameLayout {
       LayoutInflater.from(context).inflate(R.layout.mapbox_mapview_preview, this);
       return;
     }
-
 
     // inflate view
     View view = LayoutInflater.from(context).inflate(R.layout.mapbox_mapview_internal, this);
@@ -199,17 +193,19 @@ public class MapView extends FrameLayout {
    * You must call this method from the parent's {@link android.app.Activity#onCreate(Bundle)} or
    * {@link android.app.Fragment#onCreate(Bundle)}.
    * </p>
-   * You must set a valid access token with {@link MapView#setAccessToken(String)} before you this method
+   * You must set a valid access token with {@link Mapbox#getInstance(Context, String)}) before you call this method
    * or an exception will be thrown.
    *
    * @param savedInstanceState Pass in the parent's savedInstanceState.
-   * @see MapView#setAccessToken(String)
+   * @see Mapbox#getInstance(Context, String)
    */
   @UiThread
   public void onCreate(@Nullable Bundle savedInstanceState) {
-    onCreateAccessToken();
+    Mapbox.validateAccessToken();
+    nativeMapView.setAccessToken(Mapbox.getAccessToken());
+
     if (savedInstanceState == null) {
-      onCreateTelemetry();
+      MapboxEvent.trackMapLoadEvent();
     } else if (savedInstanceState.getBoolean(MapboxConstants.STATE_HAS_SAVED_STATE)) {
       mapboxMap.onRestoreInstanceState(savedInstanceState);
     }
@@ -219,36 +215,6 @@ public class MapView extends FrameLayout {
     nativeMapView.initializeContext();
 
     addOnMapChangedListener(mapCallback = new MapCallback(mapboxMap));
-  }
-
-  private void onCreateAccessToken() {
-    // TODO remove accessToken setup #6534
-    String accessToken = mapboxMap.getAccessToken();
-    if (TextUtils.isEmpty(accessToken)) {
-      accessToken = MapboxAccountManager.getInstance().getAccessToken();
-      nativeMapView.setAccessToken(accessToken);
-    } else {
-      // user provided access token through xml attributes, need to start MapboxAccountManager
-      MapboxAccountManager.start(getContext(), accessToken);
-      nativeMapView.setAccessToken(accessToken);
-    }
-    // Force a check for an access token
-    MapboxAccountManager.validateAccessToken(accessToken);
-    nativeMapView.setAccessToken(accessToken);
-  }
-
-  private void onCreateTelemetry() {
-    // TODO fixup telemetry
-    // Start Telemetry
-    Timber.i("MapView start Telemetry...");
-    MapboxEventManager eventManager = MapboxEventManager.getMapboxEventManager();
-    eventManager.initialize(getContext(), getAccessToken());
-
-    // Register MapLoad
-    Hashtable<String, Object> evt = new Hashtable<>();
-    evt.put(MapboxEvent.ATTRIBUTE_EVENT, MapboxEvent.TYPE_MAP_LOAD);
-    evt.put(MapboxEvent.ATTRIBUTE_CREATED, MapboxEventManager.generateCreateDate());
-    eventManager.pushEvent(evt);
   }
 
   /**
@@ -443,61 +409,11 @@ public class MapView extends FrameLayout {
 
     // stopgap for https://github.com/mapbox/mapbox-gl-native/issues/6242
     if (TextUtils.isEmpty(nativeMapView.getAccessToken())) {
-      setAccessToken(MapboxAccountManager.getInstance().getAccessToken());
+       Mapbox.validateAccessToken();
+       nativeMapView.setAccessToken(Mapbox.getAccessToken());
     }
 
     nativeMapView.setStyleUrl(url);
-  }
-
-  /**
-   * <p>
-   * DEPRECATED @see MapboxAccountManager#start(String)
-   * </p>
-   * <p>
-   * Sets the current Mapbox access token used to load map styles and tiles.
-   * </p>
-   * <p>
-   * You must set a valid access token before you call {@link MapView#onCreate(Bundle)}
-   * or an exception will be thrown.
-   * </p>
-   *
-   * @param accessToken Your public Mapbox access token.
-   * @see MapView#onCreate(Bundle)
-   * @deprecated As of release 4.1.0, replaced by {@link com.mapbox.mapboxsdk.MapboxAccountManager#start(Context, String)}
-   */
-  @Deprecated
-  @UiThread
-  public void setAccessToken(@NonNull String accessToken) {
-    if (destroyed) {
-      return;
-    }
-    // validateAccessToken does the null check
-    if (!TextUtils.isEmpty(accessToken)) {
-      accessToken = accessToken.trim();
-    }
-    MapboxAccountManager.validateAccessToken(accessToken);
-    nativeMapView.setAccessToken(accessToken);
-  }
-
-  /**
-   * <p>
-   * DEPRECATED @see MapboxAccountManager#getAccessToken()
-   * </p>
-   * <p>
-   * Returns the current Mapbox access token used to load map styles and tiles.
-   * </p>
-   *
-   * @return The current Mapbox access token.
-   * @deprecated As of release 4.1.0, replaced by {@link MapboxAccountManager#getAccessToken()}
-   */
-  @Deprecated
-  @UiThread
-  @Nullable
-  public String getAccessToken() {
-    if (destroyed) {
-      return "";
-    }
-    return nativeMapView.getAccessToken();
   }
 
   //

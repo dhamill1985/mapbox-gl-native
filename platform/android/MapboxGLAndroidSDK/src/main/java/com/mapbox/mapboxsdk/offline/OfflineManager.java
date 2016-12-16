@@ -7,9 +7,11 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
+
 import timber.log.Timber;
 
-import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 
 import java.io.File;
@@ -97,8 +99,8 @@ public class OfflineManager {
         String cachePath = assetRoot + File.separator + DATABASE_NAME;
         mDefaultFileSourcePtr = createDefaultFileSource(cachePath, assetRoot, DEFAULT_MAX_CACHE_SIZE);
 
-        if (MapboxAccountManager.getInstance() != null) {
-            setAccessToken(mDefaultFileSourcePtr, MapboxAccountManager.getInstance().getAccessToken());
+        if (!TextUtils.isEmpty(Mapbox.getAccessToken())) {
+            setAccessToken(mDefaultFileSourcePtr, Mapbox.getAccessToken());
         }
 
         // Delete any existing previous ambient cache database
@@ -194,7 +196,7 @@ public class OfflineManager {
      * Access token getter/setter
      *
      * @param accessToken the accessToken to be used by the offline manager.
-     * @deprecated As of release 4.1.0, replaced by {@link MapboxAccountManager#start(Context, String)} ()}
+     * @deprecated As of release 4.1.0, replaced by {@link Mapbox#start(Context, String)} ()}
      */
     @Deprecated
     public void setAccessToken(String accessToken) {
@@ -205,7 +207,7 @@ public class OfflineManager {
      * Get Access Token
      *
      * @return Access Token
-     * @deprecated As of release 4.1.0, replaced by {@link MapboxAccountManager#getAccessToken()}
+     * @deprecated As of release 4.1.0, replaced by {@link Mapbox#getAccessToken()}
      */
     @Deprecated
     public String getAccessToken() {
